@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VectorWalk - Navigation Grid Simulator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="main-container">
+        <div id="canvas-container">
+            <!-- Enhanced 8-Point Compass Widget (Top-Left) -->
+            <div id="compassWidget">
+                <div id="compassRose">
+                    <span class="compass-n">N</span>
+                    <span class="compass-ne">NE</span>
+                    <span class="compass-e">E</span>
+                    <span class="compass-se">SE</span>
+                    <span class="compass-s">S</span>
+                    <span class="compass-sw">SW</span>
+                    <span class="compass-w">W</span>
+                    <span class="compass-nw">NW</span>
+                    <div id="compassNeedle">
+                        <div class="needle-head"></div>
+                        <div class="needle-tail"></div>
+                        <div class="needle-center"></div>
+                    </div>
+                </div>
+            </div>
+            <canvas id="navCanvas"></canvas>
+        </div>
+    </div>
+
+    <div id="sidebar">
+        <h2>Nav Terminal</h2>
+        
+        <div class="panel">
+            <div class="panel-title">Navigation Script</div>
+            <textarea id="commandInput" placeholder="Enter word problem like:&#10;John walks 4 km, turns right and walks 3 km.">John walks 4 km, turns right and walks 3 km.</textarea>
+            
+            <div class="control-row" style="margin-top: 10px;">
+                <div class="panel-title" style="margin-bottom: 4px;">Grid Scale</div>
+                <select id="scaleSelect">
+                    <option value="0.001">1 Unit = 1 Meter</option>
+                    <option value="0.01">1 Unit = 10 Meters</option>
+                    <option value="0.1">1 Unit = 100 Meters</option>
+                    <option value="1" selected>1 Unit = 1 Kilometer</option>
+                </select>
+            </div>
+
+            <button id="runBtn">Start Simulation</button>
+        </div>
+
+        <!-- Rolling 3-Line Instruction Terminal -->
+        <div class="panel">
+            <div class="panel-title">Execution Terminal</div>
+            <div id="instructionTerminal">
+                <div id="termPrev" class="term-line prev">Ready to parse...</div>
+                <div id="termActive" class="term-line active">Waiting for input...</div>
+                <div id="termNext" class="term-line next">Queue empty</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Telemetry</div>
+            <div class="stat-row"><span class="stat-label">Mode:</span><span id="phaseVal" class="stat-val highlight">Ready</span></div>
+            <div class="stat-row"><span class="stat-label">Grid Coordinates:</span><span id="posVal" class="stat-val">0, 0 m</span></div>
+            <div class="stat-row"><span class="stat-label">Heading:</span><span id="dirVal" class="stat-val">NORTH</span></div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Calculated Vectors</div>
+            <div class="stat-row"><span class="stat-label">Distance Walked:</span><span id="distVal" class="stat-val">0 m</span></div>
+            <div class="stat-row"><span class="stat-label">Net Displacement:</span><span id="dispVal" class="stat-val">0 m</span></div>
+            <div class="stat-row"><span class="stat-label">Displacement Heading:</span><span id="dispHeadVal" class="stat-val highlight">-</span></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
