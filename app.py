@@ -62,7 +62,7 @@ def parse_natural_language_to_instructions(text):
         turn_deg = left_diff
 
       if turn_deg > 0:
-        instructions.append({'type': 'TURN', 'direction': turn_dir, 'value': int(turn_deg)})
+        instructions.append({'type': 'TURN', 'direction': turn_dir, 'value': float(turn_deg)})
 
       current_heading_deg = target_deg
       continue
@@ -91,8 +91,8 @@ def parse_natural_language_to_instructions(text):
           )
           else 'RIGHT'
       )
-      deg_match = re.search(r'(\d+)\s*(?:deg|°)?', lower_clause)
-      deg = int(deg_match.group(1)) if deg_match else 90
+      deg_match = re.search(r'(\d+(?:\.\d+)?)', lower_clause)
+      deg = float(deg_match.group(1)) if deg_match else 90
       instructions.append({'type': 'TURN', 'direction': turn_dir, 'value': deg})
       
       if turn_dir == 'RIGHT':
