@@ -386,6 +386,8 @@ function draw() {
                 if (Math.sqrt(hdx * hdx + hdy * hdy) < 12) {
                     let nX_km = ((node.x - startPos.x) / TILE_SIZE) * scaleVal;
                     let nY_km = ((startPos.y - node.y) / TILE_SIZE) * scaleVal;
+                    if (Math.abs(nX_km) < 0.05) nX_km = 0;
+                    if (Math.abs(nY_km) < 0.05) nY_km = 0;
                     let coordStr = scaleVal < 1 ? `${(nX_km * 1000).toFixed(0)}, ${(nY_km * 1000).toFixed(0)}` : `${nX_km.toFixed(1)}, ${nY_km.toFixed(1)}`;
                     hoveredNode = { x: ptN.x, y: ptN.y, label: coordStr };
                 }
@@ -401,28 +403,55 @@ function draw() {
         }
     }
 
+    // Always safely render Start Node A first
     if (trailPoints.length > 0) {
         let ptA = getProjectedPoint(startPos.x, startPos.y);
-        ctx.fillStyle = '#ef4444';
-        ctx.beginPath();
-        ctx.arc(ptA.x, ptA.y, Math.max(4, ptA.scale * 10), 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 12px sans-serif';
-        ctx.fillText('A (Start)', ptA.x + 10, ptA.y - 10);
+        
+        let isExactOverlap = serverData && serverData.net_displacement_km < 0.001 && targetTrailIndex >= trailPoints.length;
 
+        // If they don't overlap, draw Start Node and Label A normally on the right
+        if (!isExactOverlap) {
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.arc(ptA.x, ptA.y, Math.max(4, ptA.scale * 10), 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('A (Start)', ptA.x + 10, ptA.y - 10);
+        }
+
+        // Render Finish Node B only when simulation trail has finished and finalPos is available
         if (finalPos && targetTrailIndex >= trailPoints.length) {
             let ptB = getProjectedPoint(finalPos.x, finalPos.y);
+            let pixelDist = Math.hypot(ptA.x - ptB.x, ptA.y - ptB.y);
+            let isVisualOverlap = pixelDist < 45; // Close enough to collide visually
+
             ctx.fillStyle = '#10b981';
             ctx.beginPath();
             ctx.arc(ptB.x, ptB.y, Math.max(4, ptB.scale * 10), 0, Math.PI * 2);
             ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
             ctx.stroke();
             ctx.fillStyle = '#fff';
-            ctx.fillText('B (Finish)', ptB.x + 10, ptB.y - 10);
+            ctx.font = 'bold 12px sans-serif';
+
+            if (isExactOverlap) {
+                ctx.textAlign = 'left';
+                ctx.fillText('A / B (Start & Finish)', ptB.x + 10, ptB.y - 10);
+            } else if (isVisualOverlap) {
+                // Shift B label to the LEFT of the node so labels sit on opposite sides cleanly
+                ctx.textAlign = 'right';
+                ctx.fillText('B (Finish)', ptB.x - 10, ptB.y - 10);
+                ctx.textAlign = 'left'; // Reset back to default
+            } else {
+                ctx.textAlign = 'left';
+                ctx.fillText('B (Finish)', ptB.x + 10, ptB.y - 10);
+            }
         }
     }
 
@@ -477,6 +506,9 @@ function updateUI() {
     
     let currentX_km = ((player.x - startPos.x) / TILE_SIZE) * scaleVal;
     let currentY_km = ((startPos.y - player.y) / TILE_SIZE) * scaleVal;
+    
+    if (Math.abs(currentX_km) < 0.05) currentX_km = 0;
+    if (Math.abs(currentY_km) < 0.05) currentY_km = 0;
     
     let coordText = scaleVal < 1 ? 
         `${(currentX_km * 1000).toFixed(0)}, ${(currentY_km * 1000).toFixed(0)} m` : 
