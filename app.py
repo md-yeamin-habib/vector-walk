@@ -13,6 +13,20 @@ def parse_natural_language_to_instructions(text):
   instructions = []
   clauses = re.split(r'\.\s+|\n|,|\band then\b|\bthen\b|\band\b', text, flags=re.IGNORECASE)
 
+  # Cardinal and ordinal direction mapping to absolute angles in degrees (North = 90)
+  cardinal_angles = {
+      'northeast': 45,
+      'northwest': 135,
+      'southeast': 315,
+      'southwest': 225,
+      'north': 90,
+      'east': 0,
+      'south': 270,
+      'west': 180,
+  }
+
+  current_heading_deg = 90  # Default start facing North
+
   for clause in clauses:
     clause = clause.strip()
     if not clause:
@@ -20,10 +34,43 @@ def parse_natural_language_to_instructions(text):
 
     lower_clause = clause.lower()
 
-    if any(phrase in lower_clause for phrase in ['about turn', 'about-turn', 'turn around', 'turns around', 'turned around', 'reverse']):
-      instructions.append({'type': 'TURN', 'direction': 'RIGHT', 'value': 180})
+    # Check for absolute direction commands (order matters: check 2-word subdirections first)
+    abs_dir_match = None
+    for d_name in ['northeast', 'northwest', 'southeast', 'southwest', 'north', 'east', 'south', 'west']:
+      if (
+          f'face {d_name}' in lower_clause
+          or f'facing {d_name}' in lower_clause
+          or f'turn {d_name}' in lower_clause
+          or f'turns {d_name}' in lower_clause
+          or f'faced {d_name}' in lower_clause
+      ):
+        abs_dir_match = d_name
+        break
+
+    if abs_dir_match:
+      target_deg = cardinal_angles[abs_dir_match]
+      
+      # Calculate the shortest relative turn from current heading to target absolute heading
+      right_diff = (current_heading_deg - target_deg) % 360
+      left_diff = (target_deg - current_heading_deg) % 360
+
+      if right_diff <= left_diff:
+        turn_dir = 'RIGHT'
+        turn_deg = right_diff
+      else:
+        turn_dir = 'LEFT'
+        turn_deg = left_diff
+
+      if turn_deg > 0:
+        instructions.append({'type': 'TURN', 'direction': turn_dir, 'value': int(turn_deg)})
+
+      current_heading_deg = target_deg
       continue
 
+    if any(phrase in lower_clause for phrase in ['about turn', 'about-turn', 'turn around', 'turns around', 'turned around', 'reverse']):
+      instructions.append({'type': 'TURN', 'direction': 'RIGHT', 'value': 180})
+      current_heading_deg = (current_heading_deg - 180) % 360
+      continue
 
     if (
         'turn' in lower_clause
@@ -47,6 +94,11 @@ def parse_natural_language_to_instructions(text):
       deg_match = re.search(r'(\d+)\s*(?:deg|°)?', lower_clause)
       deg = int(deg_match.group(1)) if deg_match else 90
       instructions.append({'type': 'TURN', 'direction': turn_dir, 'value': deg})
+      
+      if turn_dir == 'RIGHT':
+        current_heading_deg = (current_heading_deg - deg) % 360
+      else:
+        current_heading_deg = (current_heading_deg + deg) % 360
       continue
 
     move_match = re.search(
