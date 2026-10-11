@@ -243,3 +243,23 @@ button:hover {
     background: #7dd3fc; 
     transform: translateY(-1px); 
 }
+
+/* Mobile and Small Screen Responsiveness */
+@media (max-width: 900px) {
+    body {
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+    }
+
+    #main-container {
+        height: 400px; /* Gives the simulation canvas a fixed, visible height on mobile */
+        width: 100%;
+    }
+
+    #sidebar {
+        width: 100%;
+        height: auto;
+    }
+}
